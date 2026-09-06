@@ -30,7 +30,8 @@ export default function HeroFrames({
 
     const ctx = canvas.getContext('2d', { alpha: false })
     const mobile = window.matchMedia('(max-width: 768px)').matches
-    const step = mobile ? 3 : 2
+    // Slightly larger step = fewer decodes, smoother load, still fluid scrub
+    const step = mobile ? 4 : 3
 
     let disposed = false
     let paintRaf = 0
@@ -40,14 +41,16 @@ export default function HeroFrames({
     let targetProgress = 0
     let smoothProgress = 0
     let lastTs = performance.now()
+    let lastPaintedIdx = -1
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.75)
+      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)
       const w = canvas.clientWidth
       const h = canvas.clientHeight
       canvas.width = Math.max(1, Math.floor(w * dpr))
       canvas.height = Math.max(1, Math.floor(h * dpr))
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      lastPaintedIdx = -1
     }
 
     const paint = () => {
@@ -55,21 +58,31 @@ export default function HeroFrames({
       if (disposed) return
       const w = canvas.clientWidth
       const h = canvas.clientHeight
-      ctx.fillStyle = '#18140F'
-      ctx.fillRect(0, 0, w, h)
 
-      if (!loader) return
+      if (!loader) {
+        ctx.fillStyle = '#18140F'
+        ctx.fillRect(0, 0, w, h)
+        return
+      }
+
       const progress = reducedMotion ? 1 : progressRef.current
+      const idx = loader.getFrameIndex(progress)
       const img = loader.getFrame(progress)
       if (!img) return
+      // Same frame — keep what's already on canvas (don't flash the fill color)
+      if (idx === lastPaintedIdx && lastPaintedIdx >= 0) return
 
+      ctx.fillStyle = '#18140F'
+      ctx.fillRect(0, 0, w, h)
       const scale = Math.max(w / img.width, h / img.height)
       const dw = img.width * scale
       const dh = img.height * scale
       ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh)
+      lastPaintedIdx = idx
     }
 
-    const requestPaint = () => {
+    const requestPaint = (force = false) => {
+      if (force) lastPaintedIdx = -1
       if (!paintRaf) paintRaf = requestAnimationFrame(paint)
     }
 
@@ -97,7 +110,6 @@ export default function HeroFrames({
         return
       }
 
-      // Same exponential blend Lenis uses for velocity catch-up
       smoothProgress += delta * (1 - Math.exp(-FRAME_SMOOTH * dt))
       publish(smoothProgress)
     }
@@ -109,7 +121,7 @@ export default function HeroFrames({
     resize()
     const ro = new ResizeObserver(() => {
       resize()
-      requestPaint()
+      requestPaint(true)
     })
     ro.observe(canvas)
 
@@ -143,21 +155,24 @@ export default function HeroFrames({
     }
 
     ;(async () => {
-      const priorityCount = mobile ? 28 : 50
+      const priorityCount = mobile ? 20 : 36
       loader = createPlaylistLoader(SCENE_PLAYLIST, {
         step,
         priorityCount,
+        concurrency: mobile ? 4 : 6,
         onProgress: (loaded, total) => {
-          requestPaint()
           signalIntroProgress(loaded, total)
+          // Paint sparingly while decoding so the loader stays smooth
+          if (loaded === 1 || loaded === priorityCount || loaded % 12 === 0) {
+            requestPaint(true)
+          }
         },
       })
       await loader.start()
       if (disposed) return
-      // Full scene load complete → intro can move to keyboard gate
       signalIntroProgress(1, 1)
       signalIntroReady()
-      requestPaint()
+      requestPaint(true)
       ScrollTrigger.refresh()
     })()
 

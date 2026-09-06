@@ -1,255 +1,143 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import gsap from 'gsap'
-import MechKeyboard, { codeToInput } from './MechKeyboard'
+import { CRITICAL_STILLS, preloadImages } from '../utils/frameLoader'
 
 const INTRO_ID = 'niz-intro'
 const READY_EVENT = 'nizaliah:intro-ready'
 const PROGRESS_EVENT = 'nizaliah:intro-progress'
-const TARGET = 'ENTER'
 
-const STATUS_WORDS = ['COMPOSING', 'BLENDING', 'SETTLING', 'READY']
+const STATUS_WORDS = ['COMPOSING', 'BLENDING', 'SETTLING', 'REFINING', 'READY']
+const LINE_WORDS = [
+  'A fragrance journey is being prepared.',
+  'Notes are settling into place.',
+  'Light, texture, and motion align.',
+  'The house is almost open.',
+  'Welcome to NIZALIAH.',
+]
 
 /**
- * Two-phase intro:
- * 1) Logo + 0→100% load bar while the site loads
- * 2) After 100%, reveal the keyboard gate (type ENTER)
+ * Award-style full-screen loader.
+ * Preloads critical stills + waits for hero frame progress, then auto-reveals.
+ * No keyboard gate.
  */
 export default function IntroLoader() {
   const { pathname } = useLocation()
   const progressRef = useRef(0)
+  const frameRatioRef = useRef(0)
+  const stillsRatioRef = useRef(0)
   const readyRef = useRef(false)
   const dismissedRef = useRef(false)
-  const typedRef = useRef('')
-  const gateShownRef = useRef(false)
-  const [active, setActive] = useState(() => {
-    if (typeof document === 'undefined') return false
-    const el = document.getElementById(INTRO_ID)
-    return Boolean(el && !el.classList.contains('is-done'))
-  })
-  const [gateLive, setGateLive] = useState(false)
-
-  const applyTyped = useCallback((next) => {
-    const clipped = next.slice(0, 12)
-    typedRef.current = clipped
-
-    const field = document.getElementById('niz-intro-typed')
-    if (field) {
-      field.textContent = clipped || 'TYPE ENTER'
-      field.classList.toggle('is-empty', !clipped)
-      field.classList.toggle('is-match', clipped.toUpperCase() === TARGET)
-    }
-  }, [])
 
   useEffect(() => {
     const el = document.getElementById(INTRO_ID)
     if (!el || el.classList.contains('is-done')) {
-      setActive(false)
+      document.body.classList.remove('niz-loading')
       return undefined
     }
 
-    setActive(true)
-    setGateLive(false)
+    document.body.classList.add('niz-loading')
     progressRef.current = 0
+    frameRatioRef.current = 0
+    stillsRatioRef.current = 0
     readyRef.current = false
     dismissedRef.current = false
-    gateShownRef.current = false
-    applyTyped('')
 
     const bar = el.querySelector('#niz-intro-bar')
     const pct = el.querySelector('#niz-intro-pct')
     const status = el.querySelector('#niz-intro-status')
-    const orb1 = el.querySelector('[data-orb="1"]')
-    const orb2 = el.querySelector('[data-orb="2"]')
-    const glow = el.querySelector('[data-glow]')
-    const particleHost = el.querySelector('[data-particles]')
-    const track = el.querySelector('.niz-intro-track')
-    const meta = el.querySelector('.niz-intro-meta')
-    const hint = el.querySelector('.niz-intro-hint')
-    const particles = []
-    if (particleHost) {
-      particleHost.innerHTML = ''
-      for (let i = 0; i < 14; i += 1) {
-        const p = document.createElement('span')
-        p.className = 'niz-particle'
-        p.style.left = `${Math.random() * 100}%`
-        p.style.top = `${Math.random() * 100}%`
-        p.style.width = `${2 + Math.random() * 3}px`
-        p.style.height = p.style.width
-        particleHost.appendChild(p)
-        particles.push(p)
-      }
-    }
+    const line = el.querySelector('#niz-intro-line')
+    const label = el.querySelector('#niz-intro-label')
 
     const ctx = gsap.context(() => {
       gsap.set(
         [
+          '.niz-intro-brand',
           '.niz-intro-logo',
-          '.niz-intro-sub',
+          '.niz-intro-row',
           '.niz-intro-track',
           '.niz-intro-meta',
-          '.niz-intro-hint',
-          '.niz-intro-typed',
-          '.niz-intro-orb',
-          '.niz-particle',
-          '#niz-intro-keyboard',
+          '.niz-intro-line',
+          '.niz-intro-rule',
         ],
         { autoAlpha: 0 },
       )
-
       if (bar) gsap.set(bar, { scaleX: 0, transformOrigin: 'left center' })
 
-      // Phase 1: loading UI only (no keyboard yet)
       gsap
         .timeline()
+        .to('.niz-intro-rule', { autoAlpha: 1, duration: 0.5, ease: 'power2.out' })
+        .to('.niz-intro-brand', { autoAlpha: 1, duration: 0.45, ease: 'power2.out' }, '-=0.2')
         .fromTo(
           '.niz-intro-logo',
-          { scale: 0.82, autoAlpha: 0 },
-          { scale: 1, autoAlpha: 1, duration: 0.75, ease: 'power3.out' },
+          { y: 12, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.65, ease: 'power3.out' },
+          '-=0.15',
         )
-        .to('.niz-intro-sub', { autoAlpha: 1, duration: 0.45 }, '-=0.25')
+        .fromTo(
+          '.niz-intro-row',
+          { y: 18, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.7, ease: 'power3.out' },
+          '-=0.3',
+        )
         .to(
-          ['.niz-intro-track', '.niz-intro-meta'],
-          { autoAlpha: 1, duration: 0.45 },
-          '-=0.2',
+          ['.niz-intro-track', '.niz-intro-meta', '.niz-intro-line'],
+          { autoAlpha: 1, duration: 0.5 },
+          '-=0.25',
         )
-        .to('.niz-intro-hint', { autoAlpha: 0.85, duration: 0.4 }, '-=0.1')
-
-      if (particles.length) {
-        gsap.to('.niz-particle', {
-          autoAlpha: 0.35,
-          duration: 1.2,
-          stagger: 0.04,
-          ease: 'power1.out',
-        })
-        particles.forEach((p, i) => {
-          gsap.to(p, {
-            y: `+=${12 + (i % 5) * 6}`,
-            duration: 2.8 + (i % 4) * 0.45,
-            yoyo: true,
-            repeat: -1,
-            ease: 'sine.inOut',
-            delay: i * 0.08,
-          })
-        })
-      }
-
-      if (orb1 && orb2) {
-        gsap.set([orb1, orb2], {
-          autoAlpha: 1,
-          left: '50%',
-          top: '48%',
-          xPercent: -50,
-          yPercent: -50,
-        })
-        gsap.to(orb1, { rotation: 360, duration: 20, repeat: -1, ease: 'none' })
-        gsap.to(orb2, { rotation: -360, duration: 32, repeat: -1, ease: 'none' })
-      }
     }, el)
 
-    const onPointerMove = (e) => {
-      const rect = el.getBoundingClientRect()
-      const px = (e.clientX - rect.left) / rect.width
-      const py = (e.clientY - rect.top) / rect.height
-      const dx = (px - 0.5) * 22
-      const dy = (py - 0.5) * 14
-
-      if (glow) {
-        gsap.to(glow, {
-          x: dx * 0.9,
-          y: dy * 0.75,
-          duration: 1.35,
-          ease: 'power3.out',
-          overwrite: 'auto',
-        })
-      }
-      particles.forEach((p, i) => {
-        const factor = ((i % 5) + 1) * 0.18
-        gsap.to(p, {
-          x: dx * factor,
-          y: dy * factor * 0.65,
-          duration: 1.4,
-          ease: 'power3.out',
-          overwrite: 'auto',
-        })
-      })
-    }
-
-    el.addEventListener('pointermove', onPointerMove)
-
+    let displayedPct = 0
     const setProgress = (value, { force = false } = {}) => {
       const next = Math.min(1, Math.max(0, value))
       const p = force ? next : Math.max(progressRef.current, next)
       progressRef.current = p
       const percent = Math.round(p * 100)
+
       if (bar) {
         gsap.to(bar, {
           scaleX: p,
-          duration: force ? 0.45 : 0.35,
+          duration: force ? 0.5 : 0.4,
           ease: 'power2.out',
           overwrite: 'auto',
           transformOrigin: 'left center',
         })
       }
-      if (pct) pct.textContent = `${percent}%`
+
+      if (pct && (force || Math.abs(percent - displayedPct) >= 1)) {
+        displayedPct = percent
+        pct.textContent = String(percent).padStart(2, '0')
+      }
+
       if (status && !readyRef.current) {
         const idx = Math.min(
           STATUS_WORDS.length - 1,
           Math.floor(p * (STATUS_WORDS.length - 0.01)),
         )
         status.textContent = STATUS_WORDS[idx]
+        if (line) line.textContent = LINE_WORDS[idx]
       }
     }
 
-    // Soft crawl so the bar moves while assets load (real load can pull ahead)
+    const combinedProgress = () => {
+      // Frames dominate load time; stills are a small share
+      const combined = frameRatioRef.current * 0.88 + stillsRatioRef.current * 0.12
+      setProgress(Math.min(0.985, combined))
+    }
+
+    // Soft crawl while real assets catch up — never blocks completion
     const tick = gsap.to(
       { v: 0 },
       {
-        v: 0.92,
-        duration: 8,
+        v: 0.72,
+        duration: 10,
         ease: 'power1.out',
         onUpdate() {
           if (readyRef.current) return
-          setProgress(this.targets()[0].v)
+          setProgress(Math.max(progressRef.current, this.targets()[0].v * 0.35))
         },
       },
     )
-
-    const showKeyboardGate = () => {
-      if (gateShownRef.current || dismissedRef.current) return
-      gateShownRef.current = true
-      setGateLive(true)
-
-      if (hint) hint.textContent = 'TYPE ENTER ON YOUR KEYBOARD'
-      const field = document.getElementById('niz-intro-typed')
-      if (field && !typedRef.current) {
-        field.textContent = 'TYPE ENTER'
-        field.classList.add('is-empty')
-      }
-
-      gsap
-        .timeline()
-        .to([track, meta], {
-          autoAlpha: 0,
-          y: -8,
-          duration: 0.4,
-          ease: 'power2.in',
-        })
-        .to(
-          '#niz-intro-keyboard',
-          { autoAlpha: 1, duration: 0.65, ease: 'power2.out' },
-          '-=0.1',
-        )
-        .to('.niz-intro-typed', { autoAlpha: 1, duration: 0.45 }, '-=0.3')
-        .to(hint, { autoAlpha: 0.9, duration: 0.4 }, '-=0.2')
-    }
-
-    const onProgress = (e) => {
-      const ratio = Number(e.detail?.ratio)
-      if (!Number.isFinite(ratio) || readyRef.current) return
-      setProgress(Math.min(0.99, ratio))
-    }
 
     const dismiss = () => {
       if (dismissedRef.current) return
@@ -258,126 +146,85 @@ export default function IntroLoader() {
       tick.kill()
       setProgress(1, { force: true })
       if (status) status.textContent = 'READY'
+      if (label) label.textContent = 'OPENING'
+      if (line) line.textContent = LINE_WORDS[LINE_WORDS.length - 1]
 
-      gsap.to(el, {
-        autoAlpha: 0,
-        duration: 0.7,
-        ease: 'power2.inOut',
-        delay: 0.05,
-        onComplete: () => {
-          el.classList.add('is-done')
-          el.setAttribute('aria-busy', 'false')
-          setActive(false)
-          setGateLive(false)
-          el.remove()
-        },
-      })
+      gsap
+        .timeline({
+          onComplete: () => {
+            el.classList.add('is-done')
+            el.setAttribute('aria-busy', 'false')
+            document.body.classList.remove('niz-loading')
+            window.dispatchEvent(new Event('nizaliah:intro-dismissed'))
+            el.remove()
+          },
+        })
+        .to('.niz-intro-inner', {
+          y: -18,
+          autoAlpha: 0,
+          duration: 0.55,
+          ease: 'power2.in',
+          delay: 0.28,
+        })
+        .to(
+          el,
+          {
+            clipPath: 'inset(0 0 100% 0)',
+            duration: 0.85,
+            ease: 'power3.inOut',
+          },
+          '-=0.15',
+        )
     }
 
-    const tryEnter = () => {
-      if (!readyRef.current || dismissedRef.current) return false
-      if (typedRef.current.toUpperCase() === TARGET) {
-        dismiss()
-        return true
-      }
-      return false
+    const onProgress = (e) => {
+      const ratio = Number(e.detail?.ratio)
+      if (!Number.isFinite(ratio) || readyRef.current) return
+      frameRatioRef.current = Math.min(1, Math.max(0, ratio))
+      combinedProgress()
     }
 
     const onReady = () => {
       if (readyRef.current) return
       readyRef.current = true
       tick.kill()
+      frameRatioRef.current = 1
+      stillsRatioRef.current = 1
       setProgress(1, { force: true })
-      if (status) status.textContent = 'READY'
-      // Brief beat at 100%, then keyboard gate
-      window.setTimeout(showKeyboardGate, 380)
+      window.setTimeout(dismiss, 420)
     }
 
-    const handleInput = (code) => {
-      if (dismissedRef.current || !gateShownRef.current) return
+    // Preload product / brand stills in parallel with hero frames
+    preloadImages(CRITICAL_STILLS, (loaded, total) => {
+      stillsRatioRef.current = total > 0 ? loaded / total : 1
+      if (!readyRef.current) combinedProgress()
+    }).then(() => {
+      stillsRatioRef.current = 1
+      if (!readyRef.current) combinedProgress()
+      // Non-home routes have no hero frames — finish after stills
+      if (pathname !== '/') onReady()
+    })
 
-      const input = codeToInput(code)
-      if (!input) return
-
-      if (input === 'Enter') {
-        if (!readyRef.current) return
-        if (typedRef.current.toUpperCase() === TARGET) dismiss()
-        return
-      }
-
-      if (input === 'Backspace') {
-        applyTyped(typedRef.current.slice(0, -1))
-        return
-      }
-
-      if (input === ' ') return
-      if (!readyRef.current) return
-
-      const next = (typedRef.current + input).slice(0, 12)
-      applyTyped(next)
-      if (next.toUpperCase() === TARGET) {
-        window.setTimeout(() => tryEnter(), 120)
-      }
-    }
-
-    el._nizHandleInput = handleInput
+    gsap.set(el, { clipPath: 'inset(0 0 0% 0)' })
 
     window.addEventListener(PROGRESS_EVENT, onProgress)
     window.addEventListener(READY_EVENT, onReady)
 
-    // Failsafe if load signal never arrives
     const failsafe = window.setTimeout(
       onReady,
-      pathname !== '/' ? 800 : 14000,
+      pathname !== '/' ? 2500 : 24000,
     )
 
     return () => {
       tick.kill()
       ctx.revert()
-      el.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener(PROGRESS_EVENT, onProgress)
       window.removeEventListener(READY_EVENT, onReady)
       window.clearTimeout(failsafe)
-      delete el._nizHandleInput
     }
-  }, [pathname, applyTyped])
+  }, [pathname])
 
-  const onStrike = useCallback(({ code, fromPointer }) => {
-    const el = document.getElementById(INTRO_ID)
-    el?._nizHandleInput?.(code)
-    void fromPointer
-  }, [])
-
-  const keyboardMount =
-    typeof document !== 'undefined'
-      ? document.getElementById('niz-intro-keyboard')
-      : null
-
-  return active && gateLive && keyboardMount
-    ? createPortal(
-        <MechKeyboard
-          finish="metal"
-          caseColor="#4A4038"
-          keyColor="#3A322C"
-          modColor="#2E2822"
-          pressColor="#D4AF37"
-          legendColor="#F8F4EE"
-          modLegendColor="#E8DCCB"
-          tilt={16}
-          size={92}
-          stiffness={18}
-          gap={5}
-          shadows={false}
-          sound
-          soundOptions={{ pitch: 11, volume: 7 }}
-          followPointer={false}
-          strength={0}
-          onStrike={onStrike}
-          style={{ width: '100%', height: '100%' }}
-        />,
-        keyboardMount,
-      )
-    : null
+  return null
 }
 
 export function signalIntroReady() {

@@ -39,16 +39,6 @@ export default function Hero({ reducedMotion, onSequenceProgress }) {
         onSequenceProgress={onSequenceProgress}
       />
 
-      {/* Soft vignette so type stays readable over frames */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-[1]"
-        style={{
-          background:
-            'linear-gradient(90deg, rgba(26,18,24,0.72) 0%, rgba(26,18,24,0.35) 42%, rgba(26,18,24,0.15) 100%)',
-        }}
-      />
-
       {/* Center slot — oversized bottle on last frame */}
       <div
         ref={setHeroSlot}
@@ -74,6 +64,7 @@ export default function Hero({ reducedMotion, onSequenceProgress }) {
           <p
             data-hero-sub
             className="mb-5 font-sans text-[10px] font-medium tracking-[0.4em] text-[#E8DCCB]"
+            style={{ textShadow: '0 1px 18px rgba(24,20,15,0.55)' }}
           >
             NIZALIAH PERFUME
           </p>
@@ -81,6 +72,7 @@ export default function Hero({ reducedMotion, onSequenceProgress }) {
             <h1
               data-hero-line
               className="font-display text-[clamp(3.5rem,11vw,7.5rem)] font-light leading-[0.9] tracking-tight text-[#F8F4EE]"
+              style={{ textShadow: '0 2px 28px rgba(24,20,15,0.45)' }}
             >
               JANAN
             </h1>
@@ -89,6 +81,7 @@ export default function Hero({ reducedMotion, onSequenceProgress }) {
             <h1
               data-hero-line
               className="font-display text-[clamp(3.5rem,11vw,7.5rem)] font-light leading-[0.9] tracking-tight text-[#D4AF37]"
+              style={{ textShadow: '0 2px 28px rgba(24,20,15,0.4)' }}
             >
               SPORT
             </h1>
@@ -96,6 +89,7 @@ export default function Hero({ reducedMotion, onSequenceProgress }) {
           <p
             data-hero-sub
             className="mt-6 max-w-sm font-sans text-sm font-light leading-relaxed tracking-wide text-[#E8DCCB]"
+            style={{ textShadow: '0 1px 16px rgba(24,20,15,0.5)' }}
           >
             Eau de Parfum. Scroll through the campaign — then follow the bottle
             into the collection.
@@ -103,6 +97,7 @@ export default function Hero({ reducedMotion, onSequenceProgress }) {
           <p
             data-hero-sub
             className="mt-8 font-sans text-[10px] tracking-[0.35em] text-[#D4AF37]"
+            style={{ textShadow: '0 1px 14px rgba(24,20,15,0.45)' }}
           >
             EAU DE PARFUM
           </p>

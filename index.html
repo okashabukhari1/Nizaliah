@@ -20,14 +20,13 @@
         position: fixed;
         inset: 0;
         z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        place-items: center;
         background:
-          radial-gradient(ellipse at 40% 35%, #fbf7f2 0%, #f4dedf 42%, #e8dccb 78%, #dcc9b0 100%);
+          linear-gradient(165deg, #fbf7f2 0%, #f0e4d4 48%, #e5d5c2 100%);
         color: #3e2e22;
         overflow: hidden;
-        cursor: default;
+        cursor: wait;
         user-select: none;
       }
       #niz-intro.is-done {
@@ -35,133 +34,105 @@
         visibility: hidden;
         pointer-events: none;
       }
-      #niz-intro .niz-intro-glow {
-        position: absolute;
-        width: 55vmax;
-        height: 55vmax;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, transparent 68%);
-        pointer-events: none;
-        transform: translate(-50%, -50%);
-        left: 50%;
-        top: 42%;
-        will-change: transform;
-      }
-      #niz-intro .niz-intro-particles {
+      #niz-intro .niz-intro-wash {
         position: absolute;
         inset: 0;
+        background:
+          radial-gradient(ellipse 55% 40% at 20% 15%, rgba(212, 175, 55, 0.14), transparent 70%),
+          radial-gradient(ellipse 50% 45% at 85% 80%, rgba(123, 94, 59, 0.1), transparent 65%);
         pointer-events: none;
-        overflow: hidden;
       }
-      #niz-intro .niz-particle {
+      #niz-intro .niz-intro-rule {
         position: absolute;
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: #d4af37;
-        opacity: 0.35;
-        will-change: transform, opacity;
-      }
-      #niz-intro .niz-intro-orb {
-        position: absolute;
-        width: min(72vw, 300px);
-        height: min(72vw, 300px);
-        border-radius: 50%;
-        border: 1px solid rgba(212, 175, 55, 0.28);
+        left: 8%;
+        right: 8%;
+        height: 1px;
+        background: rgba(62, 46, 34, 0.12);
         pointer-events: none;
-        left: 50%;
-        top: 48%;
-        transform: translate(-50%, -50%);
         opacity: 0;
-        will-change: transform;
       }
-      #niz-intro .niz-intro-orb--2 {
-        width: min(88vw, 420px);
-        height: min(88vw, 420px);
-        border-color: rgba(123, 94, 59, 0.2);
-      }
+      #niz-intro .niz-intro-rule--top { top: 9%; }
+      #niz-intro .niz-intro-rule--bottom { bottom: 9%; }
       #niz-intro .niz-intro-inner {
         position: relative;
         z-index: 5;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 1.5rem 1.25rem 2rem;
-        width: min(94vw, 720px);
+        align-items: flex-start;
+        text-align: left;
+        padding: 1.5rem 1.5rem 2rem;
+        width: min(90vw, 520px);
       }
-      #niz-intro .niz-intro-logo {
-        width: min(42vw, 180px);
-        height: auto;
-        object-fit: contain;
-        margin-bottom: 0.25rem;
-        opacity: 0;
-      }
-      #niz-intro .niz-intro-mark {
-        display: none;
-      }
-      #niz-intro .niz-intro-sub {
+      #niz-intro .niz-intro-brand {
         font-family: Manrope, system-ui, sans-serif;
         font-size: 10px;
-        letter-spacing: 0.42em;
+        letter-spacing: 0.48em;
         color: #7b5e3b;
-        margin-top: 0.55rem;
+        margin-bottom: 1.1rem;
         opacity: 0;
       }
-      #niz-intro #niz-intro-keyboard {
-        position: relative;
-        width: min(92vw, 680px);
-        height: min(42vw, 260px);
-        margin: 0.35rem 0 0.1rem;
+      #niz-intro .niz-intro-logo {
+        width: min(42vw, 160px);
+        height: auto;
+        object-fit: contain;
+        margin-bottom: 2rem;
         opacity: 0;
-        z-index: 4;
       }
-      #niz-intro .niz-intro-typed {
-        position: relative;
-        z-index: 5;
-        min-width: min(70vw, 280px);
-        margin-top: 0.85rem;
-        padding: 0.85rem 1.4rem;
-        border: 1px solid rgba(62, 46, 34, 0.28);
-        background: rgba(248, 244, 238, 0.72);
-        backdrop-filter: blur(10px);
+      #niz-intro .niz-intro-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        width: 100%;
+        gap: 1.5rem;
+        opacity: 0;
+      }
+      #niz-intro .niz-intro-counter {
         font-family: "Cormorant Garamond", Georgia, serif;
-        font-size: clamp(1.35rem, 3.2vw, 1.85rem);
-        letter-spacing: 0.42em;
-        text-indent: 0.42em;
+        font-weight: 300;
+        font-size: clamp(4.5rem, 14vw, 7.5rem);
+        line-height: 0.85;
+        letter-spacing: -0.03em;
         color: #3e2e22;
-        text-transform: uppercase;
-        opacity: 0;
+        font-variant-numeric: tabular-nums;
       }
-      #niz-intro .niz-intro-typed.is-empty {
-        color: rgba(62, 46, 34, 0.38);
-        letter-spacing: 0.28em;
-        text-indent: 0.28em;
-        font-size: clamp(0.7rem, 2vw, 0.85rem);
+      #niz-intro .niz-intro-counter span {
+        display: inline-block;
+        min-width: 1.25em;
+      }
+      #niz-intro .niz-intro-side {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.35rem;
+        padding-bottom: 0.35rem;
+      }
+      #niz-intro .niz-intro-unit {
         font-family: Manrope, system-ui, sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.36em;
+        color: #d4af37;
       }
-      #niz-intro .niz-intro-typed.is-match {
-        border-color: #d4af37;
-        color: #3e2e22;
-        box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35);
+      #niz-intro .niz-intro-status {
+        font-family: Manrope, system-ui, sans-serif;
+        font-size: 9px;
+        letter-spacing: 0.28em;
+        color: rgba(62, 46, 34, 0.55);
       }
       #niz-intro .niz-intro-track {
         position: relative;
-        width: min(100%, 420px);
-        height: 3px;
-        background: rgba(62, 46, 34, 0.14);
-        margin-top: 1.35rem;
+        width: 100%;
+        height: 2px;
+        background: rgba(62, 46, 34, 0.12);
+        margin-top: 1.75rem;
         overflow: hidden;
         opacity: 0;
-        border-radius: 2px;
       }
       #niz-intro .niz-intro-bar {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, #7b5e3b, #d4af37);
-        box-shadow: 0 0 12px rgba(212, 175, 55, 0.45);
+        background: linear-gradient(90deg, #3e2e22, #7b5e3b 40%, #d4af37);
         transform: scaleX(0);
         transform-origin: left center;
         will-change: transform;
@@ -169,52 +140,59 @@
       #niz-intro .niz-intro-meta {
         display: flex;
         justify-content: space-between;
-        width: min(100%, 420px);
-        margin-top: 0.75rem;
-        font-family: Manrope, system-ui, sans-serif;
-        font-size: 10px;
-        letter-spacing: 0.28em;
-        color: #7b5e3b;
-        opacity: 0;
-      }
-      #niz-intro .niz-intro-hint {
-        margin-top: 1rem;
+        width: 100%;
+        margin-top: 0.85rem;
         font-family: Manrope, system-ui, sans-serif;
         font-size: 9px;
-        letter-spacing: 0.32em;
-        color: rgba(62, 46, 34, 0.45);
+        letter-spacing: 0.28em;
+        color: rgba(62, 46, 34, 0.5);
+        opacity: 0;
+      }
+      #niz-intro .niz-intro-line {
+        margin-top: 1.75rem;
+        max-width: 18rem;
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+        font-weight: 300;
+        font-style: italic;
+        letter-spacing: 0.02em;
+        color: rgba(62, 46, 34, 0.72);
         opacity: 0;
       }
       body {
         margin: 0;
         background: #f8f4ee;
       }
+      body.niz-loading {
+        overflow: hidden;
+      }
     </style>
   </head>
-  <body>
+  <body class="niz-loading">
     <div id="niz-intro" aria-live="polite" aria-busy="true">
-      <div class="niz-intro-glow" data-glow aria-hidden="true"></div>
-      <div class="niz-intro-particles" data-particles aria-hidden="true"></div>
-      <div class="niz-intro-orb" data-orb="1" aria-hidden="true"></div>
-      <div class="niz-intro-orb niz-intro-orb--2" data-orb="2" aria-hidden="true"></div>
+      <div class="niz-intro-wash" aria-hidden="true"></div>
+      <div class="niz-intro-rule niz-intro-rule--top" data-rule aria-hidden="true"></div>
+      <div class="niz-intro-rule niz-intro-rule--bottom" data-rule aria-hidden="true"></div>
       <div class="niz-intro-inner">
+        <div class="niz-intro-brand">NIZALIAH PERFUME</div>
         <img class="niz-intro-logo" src="/images/logo-dark.png" alt="NIZALIAH Perfume" />
-        <div class="niz-intro-mark">NIZALIAH</div>
-        <div id="niz-intro-keyboard" aria-hidden="true"></div>
-        <div
-          class="niz-intro-typed is-empty"
-          id="niz-intro-typed"
-          aria-live="polite"
-        >TYPE ENTER</div>
-        <div class="niz-intro-sub">EAU DE PARFUM</div>
+        <div class="niz-intro-row">
+          <div class="niz-intro-counter" id="niz-intro-counter" aria-hidden="true">
+            <span id="niz-intro-pct">00</span>
+          </div>
+          <div class="niz-intro-side">
+            <div class="niz-intro-unit">PERCENT</div>
+            <div class="niz-intro-status" id="niz-intro-status">COMPOSING</div>
+          </div>
+        </div>
         <div class="niz-intro-track" aria-hidden="true">
           <div class="niz-intro-bar" id="niz-intro-bar"></div>
         </div>
         <div class="niz-intro-meta">
-          <span id="niz-intro-status">COMPOSING</span>
-          <span id="niz-intro-pct">0%</span>
+          <span id="niz-intro-label">LOADING EXPERIENCE</span>
+          <span>JANAN SPORT</span>
         </div>
-        <div class="niz-intro-hint">WAIT FOR LOAD</div>
+        <div class="niz-intro-line" id="niz-intro-line">A fragrance journey is being prepared.</div>
       </div>
     </div>
     <div id="root"></div>

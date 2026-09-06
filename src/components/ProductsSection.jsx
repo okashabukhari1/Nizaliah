@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useJourney } from '../hooks/JourneyContext'
+import { useBottleLanded } from '../hooks/useBottleLanded'
 import { products, JANAN_BOTTLE_SRC } from '../data/products'
 import MagneticCarousel from './MagneticCarousel'
 
@@ -15,6 +16,8 @@ const HOME_ORDER = [
 
 export default function ProductsSection({ reducedMotion }) {
   const { setProductSlot } = useJourney()
+  const bottleLanded = useBottleLanded()
+  const showCardBottle = reducedMotion || bottleLanded
 
   const carouselItems = HOME_ORDER.map((slug) => {
     const product = products.find((p) => p.slug === slug)
@@ -24,7 +27,7 @@ export default function ProductsSection({ reducedMotion }) {
       slug: product.slug,
       name: product.name,
       subtitle: product.type,
-      // JANAN keeps a dark empty slot so the traveling bottle can land cleanly
+      // JANAN keeps a dark empty slot until the traveler lands
       src: product.primary ? null : product.image,
       href: `/product/${product.slug}`,
       primary: product.primary,
@@ -75,15 +78,16 @@ export default function ProductsSection({ reducedMotion }) {
                   className="product-image-area product-image-area--target absolute inset-[10%] z-0"
                   aria-hidden
                 />
-                {/* Bottle stays hidden on the card; traveler hides on land and returns on scroll-up */}
-                {reducedMotion && (
-                  <img
-                    src={JANAN_BOTTLE_SRC}
-                    alt=""
-                    className="pointer-events-none absolute inset-0 z-[1] m-auto max-h-[82%] max-w-[82%] object-contain"
-                    style={{ mixBlendMode: 'screen' }}
-                  />
-                )}
+                {/* Show JANAN image on the card when the traveler lands (or reduced motion) */}
+                <img
+                  src={JANAN_BOTTLE_SRC}
+                  alt=""
+                  className="pointer-events-none absolute inset-0 z-[1] m-auto max-h-[82%] max-w-[82%] object-contain transition-opacity duration-300"
+                  style={{
+                    mixBlendMode: 'screen',
+                    opacity: showCardBottle ? 1 : 0,
+                  }}
+                />
               </>
             )
           }}
